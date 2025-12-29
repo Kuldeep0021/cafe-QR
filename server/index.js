@@ -2,7 +2,7 @@ const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
 const cors = require("cors");
-const path = require("path"); // 1. IMPORT PATH
+const path = require("path");
 const connectDB = require("./config/db");
 const orderRoutes = require("./routes/orderRoutes");
 const menuRoutes = require("./routes/menuRoutes");
@@ -21,16 +21,18 @@ connectDB();
 =========================== */
 app.use(
   cors({
-    origin: ["http://localhost:5173"],
-    // 2. ADD 'PUT' AND 'DELETE' HERE
+    origin: [
+      "http://localhost:5173", // local dev
+      "https://cafe-qr-client.onrender.com" // production frontend
+    ],
     methods: ["GET", "POST", "PATCH", "PUT", "DELETE"],
     credentials: true,
-  }),
+  })
 );
+
 app.use(express.json());
 
-// 3. ROBUST STATIC FILE SERVING
-// This ensures images load correctly regardless of where you start the server
+// Serve uploaded images
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 /* ===========================
@@ -38,12 +40,16 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 =========================== */
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:5173",
+    origin: [
+      "http://localhost:5173",
+      "https://cafe-qr-client.onrender.com"
+    ],
     methods: ["GET", "POST", "PATCH", "PUT", "DELETE"],
+    credentials: true,
   },
 });
 
-// Make io accessible inside routes/controllers
+// Make io accessible in routes/controllers
 app.set("io", io);
 
 io.on("connection", (socket) => {
@@ -63,7 +69,7 @@ app.use("/api/menu", menuRoutes);
 /* ===========================
    5. SERVER START
 =========================== */
-const PORT = process.env.PORT || 5001;
+const PORT = process.env.PORT || 10000;
 server.listen(PORT, () =>
-  console.log(`🚀 Server running on http://localhost:${PORT}`),
+  console.log(`🚀 Server running on port ${PORT}`)
 );
