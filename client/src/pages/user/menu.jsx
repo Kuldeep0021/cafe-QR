@@ -12,6 +12,9 @@ import {
   Loader2,
 } from "lucide-react";
 
+// ENV VARIABLE
+const API_URL = import.meta.env.VITE_API_BASE_URL;
+
 const Menu = () => {
   const [searchParams] = useSearchParams();
   const tableFromUrl = searchParams.get("table");
@@ -39,8 +42,9 @@ const Menu = () => {
         FETCH MENU FROM DB
   =============================== */
   useEffect(() => {
+    // Use API_URL env variable
     axios
-      .get("http://localhost:5001/api/menu")
+      .get(`${API_URL}/api/menu`)
       .then((res) => {
         setMenuItems(res.data.filter((i) => i.available));
       })
@@ -59,8 +63,8 @@ const Menu = () => {
       // 1. Simulate Network Delay
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
-      // 2. Send to Backend
-      await axios.post("http://localhost:5001/api/orders", {
+      // 2. Send to Backend using API_URL
+      await axios.post(`${API_URL}/api/orders`, {
         tableNumber: currentTable,
         items: cart.map((item) => ({
           id: item.id,
@@ -480,11 +484,9 @@ const Menu = () => {
           return (
             <div key={item._id} className="card">
               <div className="img-container">
-                {/* FIX APPLIED HERE:
-                   Removed the extra '/uploads/' from the path
-                */}
                 <img
-                  src={`http://localhost:5001${item.image}`}
+                  // Use API_URL env variable
+                  src={`${API_URL}${item.image}`}
                   alt={item.name}
                 />
               </div>
