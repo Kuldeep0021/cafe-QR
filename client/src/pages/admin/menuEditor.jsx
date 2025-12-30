@@ -15,6 +15,9 @@ import {
   X,
 } from "lucide-react";
 
+// ENV VARIABLE
+const API_URL = import.meta.env.VITE_API_BASE_URL;
+
 const MenuEditor = () => {
   // STATE
   const [menuItems, setMenuItems] = useState([]);
@@ -47,7 +50,8 @@ const MenuEditor = () => {
   const fetchMenuItems = async () => {
     try {
       setIsLoading(true);
-      const res = await axios.get("http://localhost:5001/api/menu");
+      // Use API_URL env variable
+      const res = await axios.get(`${API_URL}/api/menu`);
       setMenuItems(res.data);
     } catch (error) {
       console.error("Error fetching menu:", error);
@@ -63,10 +67,11 @@ const MenuEditor = () => {
       // Optimistic Update
       setMenuItems((prev) =>
         prev.map((item) =>
-          item._id === id ? { ...item, available: !item.available } : item,
-        ),
+          item._id === id ? { ...item, available: !item.available } : item
+        )
       );
-      await axios.patch(`http://localhost:5001/api/menu/${id}/toggle`);
+      // Use API_URL env variable
+      await axios.patch(`${API_URL}/api/menu/${id}/toggle`);
     } catch (error) {
       console.error("Error toggling availability:", error);
       fetchMenuItems(); // Revert on error
@@ -76,7 +81,8 @@ const MenuEditor = () => {
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this dish?")) return;
     try {
-      await axios.delete(`http://localhost:5001/api/menu/${id}`);
+      // Use API_URL env variable
+      await axios.delete(`${API_URL}/api/menu/${id}`);
       setMenuItems((prev) => prev.filter((item) => item._id !== id));
     } catch (error) {
       console.error("Error deleting item:", error);
@@ -93,8 +99,8 @@ const MenuEditor = () => {
       category: item.category,
       image: null, // Keep null unless they upload a new one
     });
-    // Set preview to existing image from server
-    setImagePreview(`http://localhost:5001${item.image}`);
+    // Set preview to existing image from server using API_URL
+    setImagePreview(`${API_URL}${item.image}`);
     setShowModal(true);
   };
 
@@ -139,19 +145,17 @@ const MenuEditor = () => {
       let res;
       if (isEditing) {
         // UPDATE EXISTING (PUT)
-        res = await axios.put(
-          `http://localhost:5001/api/menu/${editId}`,
-          formData,
-          {
-            headers: { "Content-Type": "multipart/form-data" },
-          },
-        );
+        // Use API_URL env variable
+        res = await axios.put(`${API_URL}/api/menu/${editId}`, formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
         setMenuItems((prev) =>
-          prev.map((item) => (item._id === editId ? res.data : item)),
+          prev.map((item) => (item._id === editId ? res.data : item))
         );
       } else {
         // CREATE NEW (POST)
-        res = await axios.post("http://localhost:5001/api/menu", formData, {
+        // Use API_URL env variable
+        res = await axios.post(`${API_URL}/api/menu`, formData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
         setMenuItems((prev) => [res.data, ...prev]);
@@ -294,7 +298,8 @@ const MenuEditor = () => {
                           <div className="w-12 h-12 bg-slate-800 rounded-xl flex items-center justify-center text-orange-500 overflow-hidden">
                             {item.image ? (
                               <img
-                                src={`http://localhost:5001${item.image}`}
+                                // Use API_URL env variable for image source
+                                src={`${API_URL}${item.image}`}
                                 alt={item.name}
                                 className="w-full h-full object-cover"
                               />
@@ -421,7 +426,9 @@ const MenuEditor = () => {
                   type="number"
                   className="w-1/2 bg-[#0f1115] border border-slate-800 p-4 rounded-xl text-white focus:border-orange-500 outline-none font-bold"
                   value={form.price}
-                  onChange={(e) => setForm({ ...form, price: e.target.value })}
+                  onChange={(e) =>
+                    setForm({ ...form, price: e.target.value })
+                  }
                 />
                 <input
                   placeholder="Category"
