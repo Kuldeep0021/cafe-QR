@@ -18,8 +18,12 @@ import {
   Search,
 } from "lucide-react";
 
+// ENV VARIABLES
+const API_URL = import.meta.env.VITE_API_BASE_URL;
+const SOCKET_URL = import.meta.env.VITE_SOCKET_URL;
+
 // Initialize Socket
-const socket = io("http://localhost:5001");
+const socket = io(SOCKET_URL);
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -53,8 +57,9 @@ const AdminDashboard = () => {
     const token = localStorage.getItem("token");
     if (!token) return;
 
+    // Use API_URL env variable
     axios
-      .get("http://localhost:5001/api/orders")
+      .get(`${API_URL}/api/orders`)
       .then((res) => setOrders(res.data))
       .catch(console.error);
 
@@ -64,7 +69,7 @@ const AdminDashboard = () => {
 
     socket.on("order-updated", (updatedOrder) => {
       setOrders((prev) =>
-        prev.map((o) => (o._id === updatedOrder._id ? updatedOrder : o)),
+        prev.map((o) => (o._id === updatedOrder._id ? updatedOrder : o))
       );
     });
 
@@ -85,16 +90,16 @@ const AdminDashboard = () => {
         (o) =>
           o.status !== "Served" ||
           o.paymentStatus === "Pending" ||
-          !o.paymentStatus,
+          !o.paymentStatus
       ),
-    [orders],
+    [orders]
   );
 
   // 2. RAW HISTORY (Served & Paid)
   const rawHistory = useMemo(
     () =>
       orders.filter((o) => o.status === "Served" && o.paymentStatus === "Paid"),
-    [orders],
+    [orders]
   );
 
   // 3. FILTERED HISTORY (Applied Month & Search)
@@ -102,7 +107,9 @@ const AdminDashboard = () => {
     return rawHistory
       .filter((order) => {
         const orderDate = new Date(order.createdAt);
-        const monthKey = `${orderDate.getFullYear()}-${String(orderDate.getMonth() + 1).padStart(2, "0")}`;
+        const monthKey = `${orderDate.getFullYear()}-${String(
+          orderDate.getMonth() + 1
+        ).padStart(2, "0")}`;
 
         const matchesMonth =
           selectedMonth === "ALL" || monthKey === selectedMonth;
@@ -121,7 +128,10 @@ const AdminDashboard = () => {
     const months = new Set();
     rawHistory.forEach((order) => {
       const d = new Date(order.createdAt);
-      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(
+        2,
+        "0"
+      )}`;
       months.add(key);
     });
     return Array.from(months).sort().reverse();
@@ -131,7 +141,7 @@ const AdminDashboard = () => {
   const totalRevenue = useMemo(
     () =>
       rawHistory.reduce((acc, curr) => acc + (parseInt(curr.total) || 0), 0),
-    [rawHistory],
+    [rawHistory]
   );
 
   const pendingRevenue = useMemo(
@@ -140,10 +150,10 @@ const AdminDashboard = () => {
         .filter(
           (o) =>
             o.status === "Served" &&
-            (o.paymentStatus === "Pending" || !o.paymentStatus),
+            (o.paymentStatus === "Pending" || !o.paymentStatus)
         )
         .reduce((acc, curr) => acc + (parseInt(curr.total) || 0), 0),
-    [orders],
+    [orders]
   );
 
   const activeTablesCount = useMemo(() => {
@@ -156,7 +166,8 @@ const AdminDashboard = () => {
      =============================== */
   const updateStatus = async (id) => {
     try {
-      await axios.patch(`http://localhost:5001/api/orders/${id}`);
+      // Use API_URL env variable
+      await axios.patch(`${API_URL}/api/orders/${id}`);
     } catch (err) {
       console.error("Error updating status:", err);
     }
@@ -164,12 +175,13 @@ const AdminDashboard = () => {
 
   const markAsPaid = async (id) => {
     try {
-      await axios.patch(`http://localhost:5001/api/orders/${id}`, {
+      // Use API_URL env variable
+      await axios.patch(`${API_URL}/api/orders/${id}`, {
         paymentStatus: "Paid",
       });
       // Optimistic Update
       setOrders((prev) =>
-        prev.map((o) => (o._id === id ? { ...o, paymentStatus: "Paid" } : o)),
+        prev.map((o) => (o._id === id ? { ...o, paymentStatus: "Paid" } : o))
       );
     } catch (err) {
       console.error("Error updating payment:", err);
@@ -424,7 +436,6 @@ const AdminDashboard = () => {
                                 {formatDate(order.createdAt)}
                               </span>
                             </div>
-                            {/* Note: Assuming 'updatedAt' is roughly when it was served/completed if 'servedAt' doesn't exist */}
                             <div className="flex items-center gap-2 text-slate-400">
                               <ChefHat size={12} className="text-orange-500" />
                               <span className="w-12">Served:</span>
@@ -520,10 +531,10 @@ const OrderCard = ({ order, onUpdateStatus, onMarkPaid }) => {
           order.status === "New"
             ? "bg-blue-500"
             : !isServed
-              ? "bg-orange-500"
-              : isPaid
-                ? "bg-emerald-600"
-                : "bg-yellow-500"
+            ? "bg-orange-500"
+            : isPaid
+            ? "bg-emerald-600"
+            : "bg-yellow-500"
         }`}
       ></div>
 
@@ -554,8 +565,8 @@ const OrderCard = ({ order, onUpdateStatus, onMarkPaid }) => {
                 order.status === "New"
                   ? "bg-blue-500/10 text-blue-400"
                   : !isServed
-                    ? "bg-orange-500/10 text-orange-400"
-                    : "bg-yellow-500/10 text-yellow-400"
+                  ? "bg-orange-500/10 text-orange-400"
+                  : "bg-yellow-500/10 text-yellow-400"
               }`}
             >
               ● {order.status}
